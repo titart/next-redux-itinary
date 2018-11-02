@@ -7,6 +7,7 @@ const DrawerWithCustomStyles = styled(Drawer)`
   overflow-y: scroll;
   z-index: 1;
   min-width: 30vw;
+  max-height: 100vh;
   padding: 0px;
 `;
 

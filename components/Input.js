@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { Absolute, Flex, Label, Relative, Text } from 'rebass';
 
 import InputWithCustomStyles from './styled/InputWithCustomStyles';
+import ButtonSaveStyles from './styled/ButtonSaveStyles';
 
 const CustomInput = ({
   forceError,
@@ -13,7 +14,9 @@ const CustomInput = ({
   meta: { pristine, visited },
   placeholder = '',
   required,
-  showLabel = true
+  showLabel = true,
+  saveButton,
+  onSave
 }) => {
   return (
     <Flex flexDirection={'column'} flex={1}>
@@ -41,6 +44,11 @@ const CustomInput = ({
           value={value}
           required={required}
         />
+        {saveButton && (
+          <ButtonSaveStyles bg="#8BC34A" onClick={() => onSave()}>
+            Save
+          </ButtonSaveStyles>
+        )}
       </Flex>
     </Flex>
   );
@@ -48,18 +56,21 @@ const CustomInput = ({
 
 CustomInput.propTypes = {
   forceError: PropTypes.string,
-  id: PropTypes.string,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   input: PropTypes.object,
   isValid: PropTypes.bool,
   label: PropTypes.string,
   meta: PropTypes.object,
   placeholder: PropTypes.string,
   required: PropTypes.bool,
-  showLabel: PropTypes.bool
+  showLabel: PropTypes.bool,
+  saveButton: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+  onSave: PropTypes.func
 };
 
 CustomInput.defaultProps = {
-  placeholder: ''
+  placeholder: '',
+  saveButton: false
 };
 
 export default CustomInput;

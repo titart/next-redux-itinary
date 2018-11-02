@@ -1,5 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
+import { Flex } from 'rebass';
 
 // Containers
 import MapsContainer from '../containers/Maps';
@@ -13,7 +14,8 @@ import './styles/MapsStyles';
 
 class Maps extends Component {
   state = {
-    addresses: []
+    addresses: [],
+    itinary: null
   };
 
   componentDidCatch(error) {
@@ -23,10 +25,12 @@ class Maps extends Component {
   }
 
   componentWillMount() {
-    const { url: { query: { addresses } } } = this.props;
-
+    const { url: { query: { addresses, itinary } } } = this.props;
     if (addresses && typeof addresses === 'string') {
       this.setState({ addresses: addresses.split(',') });
+    }
+    if (itinary && typeof itinary === 'string') {
+      this.setState({ itinary });
     }
   }
 
@@ -35,12 +39,18 @@ class Maps extends Component {
   };
 
   render() {
-    const { addresses } = this.state;
+    const { addresses, itinary } = this.state;
     return (
       <Fragment>
         <GoogleScriptProvider>
-          <MapsForm initialAddresses={addresses} onSubmit={this.showResults} />
-          <MapsContainer />
+          <Flex>
+            <MapsForm
+              initialAddresses={addresses}
+              initialItinary={itinary}
+              onSubmit={this.showResults}
+            />
+            <MapsContainer />
+          </Flex>
         </GoogleScriptProvider>
       </Fragment>
     );
@@ -48,7 +58,8 @@ class Maps extends Component {
 }
 
 Maps.propTypes = {
-  url: PropTypes.object
+  url: PropTypes.object,
+  initialItinary: PropTypes.string
 };
 
 export default Maps;

@@ -49,22 +49,27 @@ Just run : `npm run test`
 ```
 docker run -it --rm  --network nextreduxitinary_default --name pg postgres psql -h postgres-db -p 5432 -U postgres postgres
 ```
+
 ### Create your database `itinary`
+
 ```
 CREATE DATABASE itinary;
 ```
+
 ### Connect to it
+
 ```
 \connect itinary
 ```
+
 The postgres instance should be accessible inside the itinary app with its container address:
+
 ```
 # PostgresSQL
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=password
 POSTGRES_URL=postgres-db
 POSTGRES_DB=itinary
-
 ```
 
 ## Ways to improve

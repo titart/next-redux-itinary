@@ -19,6 +19,28 @@ export const FETCH_OPTIMIZE_ITINARY = `${NAME}/FETCH_OPTIMIZE_ITINARY`;
 export const FETCH_OPTIMIZE_ITINARY_FAILED = `${NAME}/FETCH_OPTIMIZE_ITINARY_FAILED`;
 export const RESOLVE_OPTIMIZE_ITINARY = `${NAME}/RESOLVE_OPTIMIZE_ITINARY`;
 
+export const ADD_ITINARY_REQUEST = `${NAME}/ADD_ITINARY_REQUEST`;
+export const ADD_ITINARY_SUCCESS = `${NAME}/ADD_ITINARY_SUCCESS`;
+export const ADD_ITINARY_FAILED = `${NAME}/ADD_ITINARY_FAILED`;
+
+export const DELETE_ITINARY_REQUEST = `${NAME}/DELETE_ITINARY_REQUEST`;
+export const DELETE_ITINARY_SUCCESS = `${NAME}/DELETE_ITINARY_SUCCESS`;
+export const DELETE_ITINARY_FAILED = `${NAME}/DELETE_ITINARY_FAILED`;
+
+export const UPDATE_ITINARY_REQUEST = `${NAME}/UPDATE_ITINARY_REQUEST`;
+export const UPDATE_ITINARY_SUCCESS = `${NAME}/UPDATE_ITINARY_SUCCESS`;
+export const UPDATE_ITINARY_FAILED = `${NAME}/UPDATE_ITINARY_FAILED`;
+
+export const FETCH_ITINARY_REQUEST = `${NAME}/FETCH_ITINARY_REQUEST`;
+export const FETCH_ITINARY_SUCCESS = `${NAME}/FETCH_ITINARY_SUCCESS`;
+export const FETCH_ITINARY_FAILED = `${NAME}/FETCH_ITINARY_FAILED`;
+
+export const FETCH_ITINARY_MAP_REQUEST = `${NAME}/FETCH_ITINARY_MAP_REQUEST`;
+export const FETCH_ITINARY_MAP_SUCCESS = `${NAME}/FETCH_ITINARY_MAP_SUCCESS`;
+export const FETCH_ITINARY_MAP_FAILED = `${NAME}/FETCH_ITINARY_MAP_FAILED`;
+
+export const RESET_FORM = `${NAME}/RESET_FORM`;
+
 /* ------------- Initial State ------------- */
 
 export const initialMapsState = Immutable({
@@ -28,7 +50,12 @@ export const initialMapsState = Immutable({
   fetchingOptimize: false,
   initError: undefined,
   optimizedError: undefined,
-  places: []
+  places: [],
+  itineraries: [],
+  addError: undefined,
+  deleteError: undefined,
+  updateError: undefined,
+  fetchError: undefined
 });
 
 /* ------------- Reducer ------------- */
@@ -46,7 +73,10 @@ function reducer(state = initialMapsState, action) {
     case FETCH_INIT_FORM_FAILED:
       return state.merge({ fetching: false, optimizedError: action.message });
     case FETCH_OPTIMIZE_ITINARY:
-      return state.merge({ fetchingOptimize: true, optimizedError: undefined });
+      return state.merge({
+        fetchingOptimize: true,
+        optimizedError: undefined
+      });
     case FETCH_OPTIMIZE_ITINARY_FAILED:
       return state.merge({
         fetchingOptimize: false,
@@ -73,6 +103,71 @@ function reducer(state = initialMapsState, action) {
         places: action.orderedPlaces,
         addressSteps: action.addressSteps,
         addressStepsOrders: action.addressStepsOrders
+      });
+    case ADD_ITINARY_REQUEST:
+      return state.merge({ fetching: true, addError: undefined });
+    case ADD_ITINARY_SUCCESS:
+      return state.merge({
+        fetching: false,
+        itineraries: [...state.itineraries, action.itinary]
+      });
+    case ADD_ITINARY_FAILED:
+      return state.merge({ fetching: false, addError: action.message });
+    case DELETE_ITINARY_REQUEST:
+      return state.merge({ fetching: true, deleteError: undefined });
+    case DELETE_ITINARY_SUCCESS: {
+      let itinaryDelete = state.itineraries.asMutable();
+      itinaryDelete.splice(action.pickItinaryIndex, 1);
+      return state.merge({ fetching: false, itineraries: itinaryDelete });
+    }
+    case DELETE_ITINARY_FAILED:
+      return state.merge({ fetching: false, deleteError: action.message });
+    case UPDATE_ITINARY_REQUEST:
+      return state.merge({ fetching: true, updateError: undefined });
+    case UPDATE_ITINARY_SUCCESS: {
+      let itinerariesUpdate = state.itineraries.asMutable();
+      itinerariesUpdate[action.pickItinaryIndex] = action.itinaryUpdate;
+      return state.merge({ fetching: false, itineraries: itinerariesUpdate });
+    }
+    case UPDATE_ITINARY_FAILED:
+      return state.merge({ fetching: false, updateError: action.message });
+    case FETCH_ITINARY_REQUEST:
+      return state.merge({ fetching: true, fetchError: undefined });
+    case FETCH_ITINARY_SUCCESS:
+      return state.merge({
+        fetching: false,
+        itineraries: action.itineraries
+      });
+    case FETCH_ITINARY_FAILED:
+      return state.merge({ fetching: false, fetchError: action.message });
+    case FETCH_ITINARY_MAP_REQUEST:
+      return state.merge({ fetching: true, fetchError: undefined });
+    case FETCH_ITINARY_MAP_SUCCESS:
+      return state.merge({
+        addressSteps: action.addressSteps,
+        addressStepsOrders: action.addressStepsOrders,
+        places: action.places,
+        fetching: false,
+        fetchingOptimize: false
+      });
+    case FETCH_ITINARY_MAP_FAILED:
+      return state.merge({ fetching: false, fetchError: action.message });
+    case RESET_FORM:
+      return state.merge({
+        addressSteps: [
+          { required: true, stepNum: 0, id: Date.now() },
+          { required: true, stepNum: 1, id: Date.now() + 1 }
+        ],
+        addressStepsOrders: [],
+        fetching: false,
+        fetchingOptimize: false,
+        initError: undefined,
+        optimizedError: undefined,
+        places: [],
+        addError: undefined,
+        deleteError: undefined,
+        updateError: undefined,
+        fetchError: undefined
       });
     default:
       return state;
@@ -132,6 +227,88 @@ export const optimizeItinary = requiredFieldsCount => (dispatch, getState) => {
   });
 };
 
+export const addItinaryRequest = (places, itinaryName) => dispatch => {
+  dispatch({ type: ADD_ITINARY_REQUEST, places, itinaryName });
+};
+
+export const addItinarySuccess = itinary => dispatch =>
+  dispatch({ type: ADD_ITINARY_SUCCESS, itinary });
+
+export const addItinaryFailed = (placeInputId, removeInput) => dispatch =>
+  dispatch({ type: ADD_ITINARY_FAILED, placeInputId, removeInput });
+
+export const deleteItinaryRequest = (
+  itinaryId,
+  pickItinaryIndex
+) => dispatch => {
+  dispatch({
+    type: DELETE_ITINARY_REQUEST,
+    itinaryId,
+    pickItinaryIndex
+  });
+};
+
+export const deleteItinarySuccess = place => dispatch =>
+  dispatch({ type: DELETE_ITINARY_SUCCESS, place });
+
+export const deleteItinaryFailed = (placeInputId, removeInput) => dispatch =>
+  dispatch({ type: DELETE_ITINARY_FAILED, placeInputId, removeInput });
+
+export const updateItinaryRequest = (
+  pickItinaryId,
+  updateData,
+  pickItinaryIndex
+) => dispatch => {
+  dispatch({
+    type: UPDATE_ITINARY_REQUEST,
+    pickItinaryId,
+    updateData,
+    pickItinaryIndex
+  });
+};
+
+export const updateItinarySuccess = (
+  itinaryUpdate,
+  pickItinaryIndex
+) => dispatch =>
+  dispatch({ type: UPDATE_ITINARY_SUCCESS, itinaryUpdate, pickItinaryIndex });
+
+export const updateItinaryFailed = (placeInputId, removeInput) => dispatch =>
+  dispatch({ type: UPDATE_ITINARY_FAILED, placeInputId, removeInput });
+
+export const fetchItinaryRequest = (places, itinaryName) => dispatch => {
+  dispatch({ type: FETCH_ITINARY_REQUEST, places, itinaryName });
+};
+
+export const fetchItinarySuccess = place => dispatch =>
+  dispatch({ type: FETCH_ITINARY_SUCCESS, place });
+
+export const fetchItinaryFailed = (placeInputId, removeInput) => dispatch =>
+  dispatch({ type: FETCH_ITINARY_FAILED, placeInputId, removeInput });
+
+export const fetchItinaryMapRequest = itinary => dispatch => {
+  dispatch({ type: FETCH_ITINARY_MAP_REQUEST, itinary });
+};
+
+export const fetchItinaryMapSuccess = (
+  addressSteps,
+  addressStepsOrders,
+  places
+) => dispatch =>
+  dispatch({
+    type: FETCH_ITINARY_MAP_SUCCESS,
+    addressSteps,
+    addressStepsOrders,
+    places
+  });
+
+export const fetchItinaryMapFailed = (placeInputId, removeInput) => dispatch =>
+  dispatch({ type: FETCH_ITINARY_MAP_FAILED, placeInputId, removeInput });
+
+export const resetForm = () => dispatch => {
+  dispatch({ type: RESET_FORM });
+};
+
 /* ------------- Selectors ------------- */
 
 export const getAddressSteps = state => state[NAME].addressSteps;
@@ -147,6 +324,8 @@ export const getFetching = state => state[NAME].fetching;
 export const getFetchingOptimize = state => state[NAME].fetchingOptimize;
 
 export const getPlaces = state => state[NAME].places;
+
+export const getItineraries = state => state[NAME].itineraries;
 
 export const getOrderedPlaces = createSelector(getPlaces, places =>
   [...places].sort((place1, place2) => place1.stepNum - place2.stepNum)

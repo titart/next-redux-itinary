@@ -89,7 +89,7 @@ class AutoCompleteInput extends Component {
 
 AutoCompleteInput.propTypes = {
   formError: PropTypes.string,
-  id: PropTypes.string,
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   initialValue: PropTypes.string,
   input: PropTypes.object,
   meta: PropTypes.object,

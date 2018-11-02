@@ -1,15 +1,27 @@
 const next = require('next');
 const Koa = require('koa');
+const koaBody = require('koa-body');
 const Router = require('koa-router');
 const { parse } = require('url');
 const request = require('request');
+const cors = require('@koa/cors');
+
+const knex = require('knex')({
+  client: 'pg',
+  version: '7.2',
+  connection: {
+    host: 'next-redux-itinary_postgres-db_1',
+    user: 'postgres',
+    database: 'itinerary'
+  }
+});
 
 const dev = process.env.NODE_ENV !== 'production';
 const n = next({ dev });
 const handle = n.getRequestHandler();
-const API_ROUTES = ['/itinary/optimize'];
+const API_ROUTES = ['/itinary/optimize', '/itineraries'];
 
-n.prepare().then(() => {
+n.prepare().then(async () => {
   if (!process.env.GOOGLE_API_KEY) {
     throw new Error(
       'Project setup: you must create a .env file containing a valid GOOGLE_API_KEY parameter.'
@@ -22,6 +34,7 @@ n.prepare().then(() => {
   router.get('*', async (ctx, next) => {
     const parsedUrl = parse(ctx.req.url, true);
     const { pathname } = parsedUrl;
+
     if (!API_ROUTES.includes(pathname)) {
       await handle(ctx.req, ctx.res);
       ctx.respond = false;
@@ -31,12 +44,19 @@ n.prepare().then(() => {
   });
 
   router.get('/itinary/optimize/', optimizeItinary);
+  router.get('/itineraries', getItineraries);
+  router.get('/itinaries/:id', getItinerary);
+  router.post('/itinerary', createItinerary);
+  router.del('/itinerary/:id', removeItinerary);
+  router.put('/itinerary/:id', updateItinerary);
 
   app.use(async (ctx, next) => {
     ctx.res.statusCode = 200;
     await next();
   });
 
+  app.use(koaBody());
+  app.use(cors());
   app.use(router.routes());
 
   app.listen(process.env.PORT || 3000);
@@ -95,5 +115,71 @@ async function optimizeItinary(ctx) {
     }
   } else {
     ctx.body = { error: true, message: 'No place ids provided' };
+  }
+}
+
+async function getItineraries(ctx) {
+  try {
+    const itineraries = await knex.select().table('itineraries');
+    ctx.body = {
+      itineraries
+    };
+  } catch (e) {
+    ctx.body = e;
+  }
+}
+
+async function createItinerary(ctx) {
+  try {
+    const result = await knex('itineraries')
+      .insert({
+        label: ctx.request.body.label,
+        place_ids: ctx.request.body.place_ids
+      })
+      .returning('*');
+    ctx.body = result;
+  } catch (e) {
+    ctx.body = e;
+  }
+}
+
+async function removeItinerary(ctx) {
+  try {
+    const result = await knex('itineraries')
+      .where('id', ctx.params.id)
+      .delete();
+    ctx.body = result;
+  } catch (e) {
+    ctx.body = e;
+  }
+}
+
+async function updateItinerary(ctx) {
+  try {
+    const result = await knex('itineraries')
+      .where('id', ctx.params.id)
+      .update({
+        label: ctx.request.body.label,
+        place_ids: ctx.request.body.place_ids
+      })
+      .returning('*');
+    ctx.body = result;
+  } catch (e) {
+    ctx.body = e;
+  }
+}
+
+async function getItinerary(ctx) {
+  try {
+    const itineraries = await knex
+      .select()
+      .table('itineraries')
+      .where('id', ctx.params.id)
+      .returning('*');
+    ctx.body = {
+      itineraries
+    };
+  } catch (e) {
+    ctx.body = e;
   }
 }
